@@ -9,15 +9,18 @@ def main():
             sum += i
     print(sum)
 
-def is_prime(num):
-    if(num > 1):
-        if(num%2 == 0):
-            return False
-        if(num%3 == 0):
-            return False
-        for i in range(3, math.ceil(num**0.5), 2):
-            if(num%i == 0):
+def is_prime(n):
+    if(n == 2):
+        return True
+    if(n%2 == 0):
+        return False
+    if(n > 1):
+        i = 2
+        # loops from 2 -> sqrt(n)
+        while(i**2 <= n):
+            if(n%i == 0):
                 return False
+            i += 1
     return True
 
 
