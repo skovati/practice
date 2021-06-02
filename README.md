@@ -1,2 +1,2 @@
-# Practice Code
-[Project Euler](https://projecteuler.net/), [Exercism](https://exercism.io/), and [r/dailyprogrammer](https://www.reddit.com/r/dailyprogrammer/) solutions in Go, C, Python, Java, or whatever else I'm trying to pracitce at the time.
+# Programming Practice Repo
+[Project Euler](https://projecteuler.net/), [r/dailyprogrammer](https://www.reddit.com/r/dailyprogrammer/), [LeetCode](https://leetcode.com), and [Exercism](https://exercism.io/) solutions in Go, C, Python, or whatever else I'm trying to practice at the time.
