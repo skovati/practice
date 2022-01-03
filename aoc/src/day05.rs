@@ -51,12 +51,11 @@ fn main() {
     // make graph matrix to hold all lines
     let mut graph: Vec<Vec<i32>> = Vec::new();
 
-    for x in 0..max_coord {
-        graph.push(Vec::new());
-        for y in 0..max_coord {
-            graph.get(x).unwrap().push(0);
-        }
+    for _ in 0..max_coord {
+        graph.push(vec![0; max_coord as usize]);
     }
+
+    println!("{:?}", graph);
 
     // loop over point vectors and add to coordinate matrix
     
