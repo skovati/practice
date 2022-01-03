@@ -1,6 +1,5 @@
 use std::fs;
 use std::cmp;
-use itertools::Itertools;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 struct Point {
@@ -11,6 +10,16 @@ struct Point {
 impl Point {
     fn max_coord(&self) -> usize {
         if self.x > self.y { self.x } else { self.y } }
+
+    fn parse(s: &str) -> Point {
+        s
+            .split_once(',')
+            .map(|(x, y)| Point {
+                x: x.parse::<usize>().unwrap(), 
+                y: y.parse::<usize>().unwrap(),
+            })
+        .unwrap()
+    }
 }
 
 fn print_graph(graph: &Vec<Vec<usize>>) {
@@ -95,22 +104,11 @@ fn main() {
             line.split(" -> ")
                 // each point
                 .map(|point| {
-                    point
-                        // get each x or y val as usize's
-                        .split(',')
-                        .map(|n| n.parse::<usize>().unwrap())
-                        .tuples()
-                        // and map to struct
-                        .map(|(x, y)| Point {
-                            x, 
-                            y,
-                        })
-                        .next()
-                        .unwrap()
+                    Point::parse(point)
                 })
-                .collect::<Vec<Point>>()
+            .collect::<Vec<Point>>()
         })
-        .collect::<Vec<Vec<Point>>>();
+    .collect::<Vec<Vec<Point>>>();
 
     // loop over input and find largest point to make coordinate matrix
     let max = lines
