@@ -9,8 +9,7 @@ struct Point {
 
 impl Point {
     fn max_coord(&self) -> i32 {
-        if self.x > self.y { self.x } else { self.y }
-    }
+        if self.x > self.y { self.x } else { self.y } }
 }
 
 fn main() {
@@ -46,18 +45,38 @@ fn main() {
         .flatten()
         .max()
         .unwrap()
-        .max_coord();
+        .max_coord() as usize + 1;
 
     // make graph matrix to hold all lines
-    let mut graph: Vec<Vec<i32>> = Vec::new();
+    let mut graph: Vec<Vec<i32>> = (0..max_coord).map(|_| vec![0i32; max_coord]).collect();
 
-    for _ in 0..max_coord {
-        graph.push(vec![0; max_coord as usize]);
+    // loop over point vectors and add to coordinate matrix
+    for line in &lines {
+        // if only y changes
+        if line[0].x == line[1].x {
+            for i in line[0].y..line[1].y {
+                graph[(line[0].x as usize)][i as usize] += 1;
+            }
+        } 
+        // otherwise, we know x changes
+        else {
+            for i in line[0].x..line[1].x {
+                graph[(line[0].y as usize)][i as usize] += 1;
+            }
+        }
     }
 
     println!("{:?}", graph);
 
-    // loop over point vectors and add to coordinate matrix
-    
-    // 
+    // loop over updated graph and see how many are > 1
+    let mut counter = 0;
+    for x in &graph {
+        for y in x {
+            if *y > 1 {
+                counter += 1;
+            }
+        }
+    }
+
+    println!("overlaps: {}", counter);
 }
