@@ -1,10 +1,16 @@
 use std::fs;
 use itertools::Itertools;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 struct Point {
     x: i32,
     y: i32,
+}
+
+impl Point {
+    fn max_coord(&self) -> i32 {
+        if self.x > self.y { self.x } else { self.y }
+    }
 }
 
 fn main() {
@@ -33,17 +39,26 @@ fn main() {
                 .collect::<Vec<Point>>()
         })
         .collect::<Vec<Vec<Point>>>();
-    }
 
     // loop over input and find largest point to make coordinate matrix
-    let max = lines
+    let max_coord = lines
         .iter()
-        .flatten();
+        .flatten()
+        .max()
+        .unwrap()
+        .max_coord();
 
-    println!("max: {:?}", max);
+    // make graph matrix to hold all lines
+    let mut graph: Vec<Vec<i32>> = Vec::new();
+
+    for x in 0..max_coord {
+        graph.push(Vec::new());
+        for y in 0..max_coord {
+            graph.get(x).unwrap().push(0);
+        }
+    }
 
     // loop over point vectors and add to coordinate matrix
     
     // 
-
 }
