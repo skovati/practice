@@ -9,9 +9,7 @@ pub fn parse_one(file: &str) -> Vec<u32> {
                 .unwrap();
             let last = l
                 .chars()
-                .rev()
-                .find_map(|c| c.to_digit(10))
-                .unwrap();
+                .rev() .find_map(|c| c.to_digit(10)) .unwrap();
 
             first * 10 + last
         })

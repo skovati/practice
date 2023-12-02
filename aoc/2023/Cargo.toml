@@ -9,5 +9,4 @@ edition = "2021"
 nom = "7.1.3"
 
 [lib]
-name = "day01"
-path = "src/day01.rs"
+name = "aoc"
