@@ -1,4 +1,4 @@
-use std::ops::Not;
+use std::{ops::Not, cmp};
 
 use nom::{
     IResult,
@@ -14,7 +14,7 @@ pub struct Cube<'a> {
     color: &'a str
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Handful {
     red: u32,
     green: u32,
@@ -24,6 +24,18 @@ pub struct Handful {
 impl Handful {
     fn exceeds_limit(s: &Self) -> bool {
         s.red > 12 || s.green > 13 || s.blue > 14
+    }
+
+    fn maximize(a: Self, b: Self) -> Self {
+        Handful {
+            red: cmp::max(a.red, b.red),
+            green: cmp::max(a.green, b.green),
+            blue: cmp::max(a.blue, b.blue)
+        }
+    }
+
+    fn product(s: Self) -> u32 {
+        s.red * s.green * s.blue
     }
 }
 
@@ -84,6 +96,17 @@ pub fn solve_one(games: Vec<Game>) -> u32 {
         .sum()
 }
 
+pub fn solve_two(games: Vec<Game>) -> u32 {
+    games.iter()
+        .map(|g| g.handfuls.iter()
+            .copied()
+            .reduce(Handful::maximize)
+            .expect("game was empty")
+        )
+        .map(Handful::product)
+        .sum()
+}
+
 #[test]
 fn test_parse_cube() {
     let input = "3 blue";
@@ -96,11 +119,7 @@ fn test_parse_cube() {
 fn test_parse_handful() {
     let input = "3 blue, 4 red, 1 green";
     let actual = parse_handful(input);
-    let expected = Ok(("", Handful {
-        red: 4,
-        green: 1,
-        blue: 3
-    }));
+    let expected = Ok(("", Handful { red: 4, green: 1, blue: 3 }));
     assert_eq!(expected, actual);
 }
 
@@ -111,20 +130,9 @@ fn test_parse_game() {
     let expected = Ok(("", Game {
         id: 1,
         handfuls: vec![
-            Handful {
-                red: 4,
-                green: 0,
-                blue: 3
-            },
-            Handful {
-                red: 1,
-                green: 2,
-                blue: 6
-            },
-            Handful { red: 0,
-                green: 2,
-                blue: 0
-            }
+            Handful { red: 4, green: 0, blue: 3 },
+            Handful { red: 1, green: 2, blue: 6 },
+            Handful { red: 0, green: 2, blue: 0 }
         ]
     }));
     assert_eq!(expected, actual);
@@ -148,4 +156,24 @@ fn part_one() {
     let input = include_str!("inputs/day02");
     let answer = 2285;
     assert_eq!(answer, solve_one(parse(input)));
+}
+
+#[test]
+fn part_two_example() {
+    let input = "
+Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
+Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
+Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
+Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
+Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green
+    ".trim_start();
+    let answer = 2286;
+    assert_eq!(answer, solve_two(parse(input)));
+}
+
+#[test]
+fn part_two() {
+    let input = include_str!("inputs/day02");
+    let answer = 77021;
+    assert_eq!(answer, solve_two(parse(input)));
 }
