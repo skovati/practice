@@ -1,6 +1,4 @@
-use std::str::{self, FromStr};
 use std::ops::Not;
-use std::cmp;
 
 use nom::{
     IResult,
@@ -11,46 +9,21 @@ use nom::{
 };
 
 #[derive(Debug, PartialEq)]
-enum Color {
-    Red,
-    Green,
-    Blue
-}
-
-impl FromStr for Color {
-    type Err = ();
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "red" => Ok(Color::Red),
-            "green" => Ok(Color::Green),
-            "blue" => Ok(Color::Blue),
-            _ => Err(())
-        }
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub struct Cube {
+pub struct Cube<'a> {
     amount: u32,
-    color: Color
-}
-
-impl Cube {
-    fn exceeds_limit(s: &Self) -> bool {
-        match s.color {
-            Color::Red => s.amount > 12,
-            Color::Green => s.amount > 13,
-            Color::Blue => s.amount > 14
-        }
-    }
+    color: &'a str
 }
 
 #[derive(Debug, PartialEq)]
-pub struct Handful(Vec<Cube>);
+pub struct Handful {
+    red: u32,
+    green: u32,
+    blue: u32
+}
 
 impl Handful {
     fn exceeds_limit(s: &Self) -> bool {
-        s.0.iter().any(Cube::exceeds_limit)
+        s.red > 12 || s.green > 13 || s.blue > 14
     }
 }
 
@@ -63,16 +36,27 @@ pub struct Game {
 pub fn parse_cube(input: &str) -> IResult<&str, Cube> {
     let (input, (amount, color)) =
         separated_pair(complete::u32, tag(" "), alpha1)(input)?;
-    Ok((input, Cube {
-        amount,
-        color: color.parse().expect("unsupported color")
-    }))
+    Ok((input, Cube { amount, color }))
 }
 
 pub fn parse_handful(input: &str) -> IResult<&str, Handful> {
     let (input, cubes) =
         separated_list1(tag(", "), parse_cube)(input)?;
-    Ok((input, Handful(cubes)))
+    let (red, green, blue) = cubes.iter()
+        .fold((0, 0, 0), |(red, green, blue), cube| {
+            match cube.color {
+                "red" => (red + cube.amount, green, blue),
+                "green" => (red, green + cube.amount, blue),
+                "blue" => (red, green, blue + cube.amount),
+                _ => panic!("unsupported color")
+            }
+        });
+
+    Ok((input, Handful {
+        red,
+        green,
+        blue
+    }))
 }
 
 pub fn parse_game(input: &str) -> IResult<&str, Game> {
@@ -104,7 +88,7 @@ pub fn solve_one(games: Vec<Game>) -> u32 {
 fn test_parse_cube() {
     let input = "3 blue";
     let actual = parse_cube(input);
-    let expected = Ok(("", Cube { amount: 3, color: Color::Blue }));
+    let expected = Ok(("", Cube { amount: 3, color: "blue" }));
     assert_eq!(expected, actual);
 }
 
@@ -112,11 +96,11 @@ fn test_parse_cube() {
 fn test_parse_handful() {
     let input = "3 blue, 4 red, 1 green";
     let actual = parse_handful(input);
-    let expected = Ok(("", Handful(vec![
-        Cube { amount: 3, color: Color::Blue },
-        Cube { amount: 4, color: Color::Red },
-        Cube { amount: 1, color: Color::Green }
-    ])));
+    let expected = Ok(("", Handful {
+        red: 4,
+        green: 1,
+        blue: 3
+    }));
     assert_eq!(expected, actual);
 }
 
@@ -127,16 +111,20 @@ fn test_parse_game() {
     let expected = Ok(("", Game {
         id: 1,
         handfuls: vec![
-            Handful(vec![
-                Cube { amount: 3, color: Color::Blue },
-                Cube { amount: 4, color: Color::Red }
-            ]),
-            Handful(vec![
-                Cube { amount: 1, color: Color::Red },
-                Cube { amount: 2, color: Color::Green },
-                Cube { amount: 6, color: Color::Blue }
-            ]),
-            Handful(vec![ Cube { amount: 2, color: Color::Green } ])
+            Handful {
+                red: 4,
+                green: 0,
+                blue: 3
+            },
+            Handful {
+                red: 1,
+                green: 2,
+                blue: 6
+            },
+            Handful { red: 0,
+                green: 2,
+                blue: 0
+            }
         ]
     }));
     assert_eq!(expected, actual);
