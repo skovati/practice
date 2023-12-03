@@ -92,7 +92,7 @@ fn part_one_small() {
 
 #[test]
 fn part_one_big() {
-    let input = include_str!("inputs/day01/1");
+    let input = include_str!("inputs/day01");
     let values = parse_one(input);
     let answer = solve(values);
     assert_eq!(answer, 55447);
@@ -122,7 +122,7 @@ fn part_two_multiple_instance_of_digits() {
 
 #[test]
 fn part_two_big() {
-    let input = include_str!("inputs/day01/2");
+    let input = include_str!("inputs/day01");
     let answer = 54706;
     assert_eq!(solve(parse_two(input)), answer);
 }
