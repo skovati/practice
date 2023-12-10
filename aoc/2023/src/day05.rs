@@ -6,6 +6,9 @@ use nom::{
     multi::{separated_list1, many0}
 };
 
+/****************************************
+* DATA MODEL
+****************************************/
 #[derive(Debug, PartialEq, Clone)]
 pub struct MapRange {
     destination: u64,
@@ -14,18 +17,17 @@ pub struct MapRange {
 }
 
 impl MapRange {
-    fn range_map(&self, num: u64) -> u64 {
+    fn try_convert(&self, num: u64) -> Option<u64> {
         // if the number is within our source range
         if num >= self.source && num < self.source + self.range {
             // map it to the destination range
-            num - self.source + self.destination
+            Some(num - self.source + self.destination)
         } else {
             // otherwise, it stays the same
-            num
+            None
         }
     }
 }
-
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Map {
@@ -35,16 +37,16 @@ pub struct Map {
 
 impl Map {
     fn range_map(&self, num: u64) -> u64 {
-        for range_map in &self.ranges {
-            let res = range_map.range_map(num);
-            if res != num {
-                return res
-            }
-        }
-        num
+        self.ranges.iter()
+            // short circuit on the first successful category mapping
+            .find_map(|r| r.try_convert(num))
+            .unwrap_or(num)
     }
 }
 
+/****************************************
+* PARSERS
+****************************************/
 pub fn parse_seeds(input: &str) -> IResult<&str, Vec<u64>> {
     delimited(
         tag("seeds: "),
@@ -55,12 +57,11 @@ pub fn parse_seeds(input: &str) -> IResult<&str, Vec<u64>> {
 
 pub fn parse_map_range(input: &str) -> IResult<&str, MapRange> {
     let (input, nums) = separated_list1(char(' '), complete::u64)(input)?;
-    let mut iter = nums.into_iter();
-    Ok((input, MapRange {
-        destination: iter.next().expect("error parsing range"),
-        source: iter.next().expect("error parsing range"),
-        range: iter.next().expect("error parsing range"),
-    }))
+    if let [destination, source, range] = nums[..3] {
+        Ok((input, MapRange { destination, source, range }))
+    } else {
+        panic!("can't parse map range")
+    }
 }
 
 pub fn parse_map(input: &str) -> IResult<&str, Map> {
@@ -90,20 +91,26 @@ pub fn parse(input: &str) -> (Vec<u64>, Vec<Map>) {
     (seeds, maps)
 }
 
+/****************************************
+* SOLVERS
+****************************************/
 pub fn solve_one(seeds: Vec<u64>, maps: Vec<Map>) -> u64 {
     // for each category map
     *maps.iter()
-        // run our input seeds through each
+        // run our input seeds through each range
         .fold(seeds, |acc, m| {
             acc.iter()
                 .map(|a| m.range_map(*a))
-                .collect::<Vec<u64>>()
+                .collect()
         })
         .iter()
         .min()
         .expect("no minimum found")
 }
 
+/****************************************
+* TESTS
+****************************************/
 #[test]
 fn test_parse_seeds() {
     let input = "seeds: 41 48 83 86 17";
