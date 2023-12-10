@@ -1,10 +1,12 @@
 use nom::{
     IResult,
-    character::complete::{self, char, newline},
-    sequence::{terminated, pair, delimited},
+    character::complete::{self, char, newline, space1},
+    sequence::{terminated, pair, delimited, tuple},
     bytes::complete::{tag, take_until},
     multi::{separated_list1, many0}
 };
+
+use rayon::prelude::*;
 
 /****************************************
 * DATA MODEL
@@ -55,6 +57,22 @@ pub fn parse_seeds(input: &str) -> IResult<&str, Vec<u64>> {
     )(input)
 }
 
+pub fn parse_seeds_as_range(input: &str) -> IResult<&str, Vec<u64>> {
+    let (input, pairs) = delimited(
+        tag("seeds: "),
+        separated_list1(space1, tuple((complete::u64, space1, complete::u64))),
+        many0(newline)
+    )(input)?;
+
+    Ok((input, pairs.par_iter()
+        .flat_map(|(start, _, range)| {
+            let bound = start + range;
+            *start..bound
+        })
+        .collect()
+    ))
+}
+
 pub fn parse_map_range(input: &str) -> IResult<&str, MapRange> {
     let (input, nums) = separated_list1(char(' '), complete::u64)(input)?;
     if let [destination, source, range] = nums[..3] {
@@ -91,6 +109,12 @@ pub fn parse(input: &str) -> (Vec<u64>, Vec<Map>) {
     (seeds, maps)
 }
 
+pub fn parse_two(input: &str) -> (Vec<u64>, Vec<Map>) {
+    let (input, seeds) = parse_seeds_as_range(input).expect("error parsing seeds");
+    let (_, maps) = parse_maps(input).expect("error parsing maps");
+    (seeds, maps)
+}
+
 /****************************************
 * SOLVERS
 ****************************************/
@@ -99,11 +123,11 @@ pub fn solve_one(seeds: Vec<u64>, maps: Vec<Map>) -> u64 {
     *maps.iter()
         // run our input seeds through each range
         .fold(seeds, |acc, m| {
-            acc.iter()
+            acc.par_iter()
                 .map(|a| m.range_map(*a))
                 .collect()
         })
-        .iter()
+        .par_iter()
         .min()
         .expect("no minimum found")
 }
@@ -152,6 +176,14 @@ fn test_parse_seeds() {
     let input = "seeds: 41 48 83 86 17";
     let actual = parse_seeds(input);
     let expected = Ok(("", vec![41, 48, 83, 86, 17]));
+    assert_eq!(expected, actual);
+}
+
+#[test]
+fn test_parse_seeds_as_range() {
+    let input = "seeds: 41 3 83 5";
+    let actual = parse_seeds_as_range(input);
+    let expected = Ok(("", vec![41, 42, 43, 83, 84, 85, 86, 87]));
     assert_eq!(expected, actual);
 }
 
@@ -289,5 +321,21 @@ fn part_one() {
     let input = include_str!("inputs/day05");
     let answer = 322500873;
     let (seeds, maps) = parse(input);
+    assert_eq!(answer, solve_one(seeds, maps));
+}
+
+#[test]
+fn part_two_example() {
+    let answer = 46;
+    let (seeds, maps) = parse_two(EXAMPLE_INPUT);
+    assert_eq!(answer, solve_one(seeds, maps));
+}
+
+#[test]
+#[ignore]
+fn part_two() {
+    let input = include_str!("inputs/day05");
+    let answer = 108956227;
+    let (seeds, maps) = parse_two(input);
     assert_eq!(answer, solve_one(seeds, maps));
 }
