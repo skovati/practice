@@ -111,6 +111,42 @@ pub fn solve_one(seeds: Vec<u64>, maps: Vec<Map>) -> u64 {
 /****************************************
 * TESTS
 ****************************************/
+
+const EXAMPLE_INPUT: &str = "seeds: 79 14 55 13
+
+seed-to-soil map:
+50 98 2
+52 50 48
+
+soil-to-fertilizer map:
+0 15 37
+37 52 2
+39 0 15
+
+fertilizer-to-water map:
+49 53 8
+0 11 42
+42 0 7
+57 7 4
+
+water-to-light map:
+88 18 7
+18 25 70
+
+light-to-temperature map:
+45 77 23
+81 45 19
+68 64 13
+
+temperature-to-humidity map:
+0 69 1
+1 0 69
+
+humidity-to-location map:
+60 56 37
+56 93 4
+";
+
 #[test]
 fn test_parse_seeds() {
     let input = "seeds: 41 48 83 86 17";
@@ -243,43 +279,8 @@ seed-to-soil map:
 
 #[test]
 fn part_one_example() {
-    let input = "
-seeds: 79 14 55 13
-
-seed-to-soil map:
-50 98 2
-52 50 48
-
-soil-to-fertilizer map:
-0 15 37
-37 52 2
-39 0 15
-
-fertilizer-to-water map:
-49 53 8
-0 11 42
-42 0 7
-57 7 4
-
-water-to-light map:
-88 18 7
-18 25 70
-
-light-to-temperature map:
-45 77 23
-81 45 19
-68 64 13
-
-temperature-to-humidity map:
-0 69 1
-1 0 69
-
-humidity-to-location map:
-60 56 37
-56 93 4
-".trim_start();
     let answer = 35;
-    let (seeds, maps) = parse(input);
+    let (seeds, maps) = parse(EXAMPLE_INPUT);
     assert_eq!(answer, solve_one(seeds, maps));
 }
 
