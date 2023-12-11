@@ -1,9 +1,9 @@
 use nom::{
     IResult,
-    character::complete::{self, char, newline, space1},
-    sequence::{terminated, pair, delimited, tuple, preceded},
-    bytes::complete::{tag, take_until},
-    multi::{separated_list1, many0}
+    character::complete::{self, newline, space1},
+    sequence::{pair, delimited},
+    bytes::complete::tag,
+    multi::separated_list1
 };
 
 /****************************************
@@ -11,15 +11,15 @@ use nom::{
 ****************************************/
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Race {
-    duration: u32,
-    record: u32
+    duration: u64,
+    record: u64
 }
 
 /****************************************
 * PARSERS
 ****************************************/
-pub fn parse_list(input: &str) -> IResult<&str, Vec<u32>> {
-    separated_list1(space1, complete::u32)(input)
+pub fn parse_list(input: &str) -> IResult<&str, Vec<u64>> {
+    separated_list1(space1, complete::u64)(input)
 }
 
 pub fn parse(input: &str) -> Vec<Race> {
@@ -46,6 +46,39 @@ pub fn parse(input: &str) -> Vec<Race> {
         .collect()
 }
 
+pub fn parse_two(input: &str) -> Vec<Race> {
+    let (input, durations) = delimited(
+        pair(tag("Time:"), space1),
+        parse_list,
+        newline
+    )(input).expect("error parsing durations");
+
+    let (_, records) = delimited(
+        pair(tag("Distance:"), space1),
+        parse_list,
+        newline
+    )(input).expect("error parsing records");
+
+    let d: u64 = durations.iter()
+        .map(|n| n.to_string())
+        .collect::<Vec<String>>()
+        .join("")
+        .parse()
+        .expect("error parsing duration");
+
+    let r: u64 = records.iter()
+        .map(|n| n.to_string())
+        .collect::<Vec<String>>()
+        .join("")
+        .parse()
+        .expect("error parsing duration");
+
+    vec![Race {
+        duration: d,
+        record: r
+    }]
+}
+
 /****************************************
 * SOLVERS
 ****************************************/
@@ -64,7 +97,7 @@ pub fn solve_one(races: Vec<Race>) -> u64 {
 /****************************************
 * TESTS
 ****************************************/
-const EXAMPLE_INPUT: &str = "
+pub const EXAMPLE_INPUT: &str = "
 Time:      7  15   30
 Distance:  9  40  200
 ";
@@ -111,5 +144,21 @@ fn part_one() {
     let answer = 140220;
     let input = include_str!("inputs/day06");
     let actual = solve_one(parse(input));
+    assert_eq!(answer, actual);
+}
+
+#[test]
+fn part_two_example() {
+    let answer = 71503;
+    let input = EXAMPLE_INPUT.trim_start();
+    let actual = solve_one(parse_two(input));
+    assert_eq!(answer, actual);
+}
+
+#[test]
+fn part_two() {
+    let answer = 39570185;
+    let input = include_str!("inputs/day06");
+    let actual = solve_one(parse_two(input));
     assert_eq!(answer, actual);
 }
