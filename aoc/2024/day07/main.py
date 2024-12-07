@@ -1,5 +1,6 @@
 import pathlib
 import operator
+import ray
 
 from typing import TypeAlias, Callable
 from dataclasses import dataclass, field
@@ -41,20 +42,30 @@ def parse_equations(block: str, operators: list[Callable]) -> list[Equation]:
 
     return equations
 
+@ray.remote
+def solve_equation(eq: Equation) -> int:
+    return eq.goal if eq.solve() else 0
+
 def solve_p1(path: str):
     contents = pathlib.Path(path).read_text()
     eqs = parse_equations(contents, operators = [operator.add, operator.mul])
     return sum(eq.goal for eq in eqs if eq.solve())
 
-def solve_p2(path: str):
+def solve_p2(path: str, parallelize: bool = True):
     contents = pathlib.Path(path).read_text()
     eqs = parse_equations(contents, operators = [operator.add, operator.mul, concat])
-    return sum(eq.goal for eq in eqs if eq.solve())
+    if parallelize:
+        ray.init()
+        results = ray.get([solve_equation.remote(eq) for eq in eqs])
+        ray.shutdown()
+        return sum(results)
+    else:
+        return sum(eq.goal for eq in eqs if eq.solve())
 
 def main():
     print(f"p1 example solution: {solve_p1('example.txt')}")
     print(f"p1 final solution: {solve_p1('input.txt')}")
-    print(f"p2 example solution: {solve_p2('example.txt')}")
+    print(f"p2 example solution: {solve_p2('example.txt', parallelize=False)}")
     print(f"p2 final solution: {solve_p2('input.txt')}")
 
 if __name__ == "__main__":

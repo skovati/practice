@@ -23,6 +23,7 @@
               numpy
               networkx
               networkx.optional-dependencies.default
+              ray
             ]);
         };
       });
