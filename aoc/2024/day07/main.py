@@ -22,6 +22,8 @@ class Equation():
             running_total = self.components[0]
             for i, op in enumerate(ops):
                 running_total = op(running_total, self.components[i+1])
+                if running_total > self.goal:
+                    break
             if running_total == self.goal:
                 return True
         return False
